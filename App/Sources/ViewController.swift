@@ -8,19 +8,18 @@
 import UIKit
 import UniformTypeIdentifiers
 
-class ViewController: UIViewController, OTAClientDelegate {
+class ViewController: UIViewController, OTAClientDelegate, UIDocumentPickerDelegate {
 
     // MARK: - UI 元素
 
     private let scrollView = UIScrollView()
-    private let contentView = UIView()
+    private let stackView = UIStackView()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "AE5I 仪表 WiFi 升级"
         label.font = .systemFont(ofSize: 22, weight: .bold)
         label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
@@ -30,18 +29,16 @@ class ViewController: UIViewController, OTAClientDelegate {
         label.font = .systemFont(ofSize: 14)
         label.textColor = .secondaryLabel
         label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
     private let wifiInfoLabel: UILabel = {
         let label = UILabel()
-        label.text = "请先连接仪表 WiFi\nSSID: ZEEHO-xxxx  密码: 00A0400022"
+        label.text = "请先连接仪表 WiFi\nSSID: ZEEHO-xxxx  密码: 00A0400022 / 12345678"
         label.font = .systemFont(ofSize: 13)
         label.textColor = .systemOrange
         label.textAlignment = .center
         label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
@@ -52,7 +49,7 @@ class ViewController: UIViewController, OTAClientDelegate {
         button.backgroundColor = .systemBlue
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 10
-        button.translatesAutoresizingMaskIntoConstraints = false
+        button.contentEdgeInsets = UIEdgeInsets(top: 14, left: 20, bottom: 14, right: 20)
         return button
     }()
 
@@ -63,7 +60,6 @@ class ViewController: UIViewController, OTAClientDelegate {
         label.textColor = .secondaryLabel
         label.textAlignment = .center
         label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
@@ -74,9 +70,9 @@ class ViewController: UIViewController, OTAClientDelegate {
         button.backgroundColor = .systemGreen
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 12
+        button.contentEdgeInsets = UIEdgeInsets(top: 16, left: 20, bottom: 16, right: 20)
         button.isEnabled = false
         button.alpha = 0.5
-        button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
 
@@ -87,8 +83,8 @@ class ViewController: UIViewController, OTAClientDelegate {
         button.backgroundColor = .systemRed
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 10
+        button.contentEdgeInsets = UIEdgeInsets(top: 10, left: 30, bottom: 10, right: 30)
         button.isHidden = true
-        button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
 
@@ -97,7 +93,6 @@ class ViewController: UIViewController, OTAClientDelegate {
         pv.progress = 0
         pv.trackTintColor = .systemGray5
         pv.progressTintColor = .systemGreen
-        pv.translatesAutoresizingMaskIntoConstraints = false
         return pv
     }()
 
@@ -106,7 +101,6 @@ class ViewController: UIViewController, OTAClientDelegate {
         label.text = "0%"
         label.font = .monospacedDigitSystemFont(ofSize: 14, weight: .medium)
         label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
@@ -117,7 +111,6 @@ class ViewController: UIViewController, OTAClientDelegate {
         tv.layer.cornerRadius = 8
         tv.isEditable = false
         tv.textContainerInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
-        tv.translatesAutoresizingMaskIntoConstraints = false
         return tv
     }()
 
@@ -125,7 +118,6 @@ class ViewController: UIViewController, OTAClientDelegate {
         let button = UIButton(type: .system)
         button.setTitle("免责声明", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 12)
-        button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
 
@@ -149,76 +141,70 @@ class ViewController: UIViewController, OTAClientDelegate {
     private func setupUI() {
         view.backgroundColor = .systemBackground
 
-        view.addSubview(scrollView)
+        // ScrollView
         scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(contentView)
-        contentView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
 
-        [titleLabel, statusLabel, wifiInfoLabel, fileButton, fileInfoLabel,
-         pushButton, cancelButton, progressView, progressLabel,
-         logTextView, disclaimerButton].forEach {
-            contentView.addSubview($0)
+        // StackView
+        stackView.axis = .vertical
+        stackView.spacing = 16
+        stackView.alignment = .fill
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(stackView)
+
+        // 添加子视图到 stackView
+        let sections: [UIView] = [
+            titleLabel,
+            statusLabel,
+            wifiInfoLabel,
+            fileButton,
+            fileInfoLabel,
+            pushButton,
+            cancelButton,
+            progressView,
+            progressLabel,
+            logTextView,
+            disclaimerButton
+        ]
+
+        for section in sections {
+            let wrapper = UIView()
+            wrapper.translatesAutoresizingMaskIntoConstraints = false
+            section.translatesAutoresizingMaskIntoConstraints = false
+            wrapper.addSubview(section)
+
+            NSLayoutConstraint.activate([
+                section.topAnchor.constraint(equalTo: wrapper.topAnchor),
+                section.leadingAnchor.constraint(equalTo: wrapper.leadingAnchor, constant: 16),
+                section.trailingAnchor.constraint(equalTo: wrapper.trailingAnchor, constant: -16),
+                section.bottomAnchor.constraint(equalTo: wrapper.bottomAnchor),
+            ])
+
+            // 按钮和取消按钮居中
+            if section == fileButton || section == pushButton || section == cancelButton {
+                section.leadingAnchor.constraint(greaterThanOrEqualTo: wrapper.leadingAnchor, constant: 40).isActive = true
+                section.trailingAnchor.constraint(lessThanOrEqualTo: wrapper.trailingAnchor, constant: -40).isActive = true
+                section.centerXAnchor.constraint(equalTo: wrapper.centerXAnchor).isActive = true
+            }
+
+            stackView.addArrangedSubview(wrapper)
         }
 
+        // logTextView 固定高度
+        logTextView.heightAnchor.constraint(equalToConstant: 200).isActive = true
+
+        // 约束
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 
-            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
-            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
-            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
-
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 20),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-
-            statusLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
-            statusLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            statusLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-
-            wifiInfoLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 12),
-            wifiInfoLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            wifiInfoLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-
-            fileButton.topAnchor.constraint(equalTo: wifiInfoLabel.bottomAnchor, constant: 20),
-            fileButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
-            fileButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
-            fileButton.heightAnchor.constraint(equalToConstant: 50),
-
-            fileInfoLabel.topAnchor.constraint(equalTo: fileButton.bottomAnchor, constant: 10),
-            fileInfoLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            fileInfoLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-
-            pushButton.topAnchor.constraint(equalTo: fileInfoLabel.bottomAnchor, constant: 24),
-            pushButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
-            pushButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
-            pushButton.heightAnchor.constraint(equalToConstant: 54),
-
-            cancelButton.topAnchor.constraint(equalTo: pushButton.bottomAnchor, constant: 10),
-            cancelButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            cancelButton.widthAnchor.constraint(equalToConstant: 120),
-            cancelButton.heightAnchor.constraint(equalToConstant: 40),
-
-            progressView.topAnchor.constraint(equalTo: cancelButton.bottomAnchor, constant: 20),
-            progressView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 30),
-            progressView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -30),
-
-            progressLabel.topAnchor.constraint(equalTo: progressView.bottomAnchor, constant: 6),
-            progressLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            progressLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-
-            logTextView.topAnchor.constraint(equalTo: progressLabel.bottomAnchor, constant: 16),
-            logTextView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            logTextView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            logTextView.heightAnchor.constraint(equalToConstant: 200),
-
-            disclaimerButton.topAnchor.constraint(equalTo: logTextView.bottomAnchor, constant: 12),
-            disclaimerButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            disclaimerButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
+            stackView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 20),
+            stackView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
+            stackView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -20),
+            stackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
         ])
     }
 
@@ -232,18 +218,37 @@ class ViewController: UIViewController, OTAClientDelegate {
     // MARK: - 文件选择
 
     @objc private func selectFile() {
-        var types: [UTType] = [.data]
-        if let binType = UTType(filenameExtension: "bin") {
-            types.append(binType)
-        }
-        if let zipType = UTType(filenameExtension: "zip") {
-            types.append(zipType)
-        }
-
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: types)
+        // 支持所有文件类型
+        let types: [UTType] = [.item]
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: types, asCopy: true)
         picker.delegate = self
         picker.allowsMultipleSelection = false
+        picker.modalPresentationStyle = .formSheet
         present(picker, animated: true)
+    }
+
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        guard let url = urls.first else { return }
+        selectedFileURL = url
+
+        do {
+            let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+            let fileSize = attributes[.size] as? UInt64 ?? 0
+            let sizeMB = Double(fileSize) / 1024.0 / 1024.0
+            fileInfoLabel.text = String(format: "%@\n%.1f MB", url.lastPathComponent, sizeMB)
+            fileInfoLabel.textColor = .label
+
+            pushButton.isEnabled = !isPushing
+            pushButton.alpha = isPushing ? 0.5 : 1.0
+            pushButton.setTitle("开始推送", for: .normal)
+            pushButton.backgroundColor = .systemGreen
+        } catch {
+            fileInfoLabel.text = "读取文件失败: \(error.localizedDescription)"
+        }
+    }
+
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        // 用户取消，不做处理
     }
 
     // MARK: - 推送
@@ -328,7 +333,7 @@ class ViewController: UIViewController, OTAClientDelegate {
     private func appendLog(_ message: String) {
         let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
         logTextView.text += "[\(timestamp)] \(message)\n"
-        let bottom = NSRange(location: logTextView.text.count - 1, length: 1)
+        let bottom = NSRange(location: max(0, logTextView.text.count - 1), length: 1)
         logTextView.scrollRangeToVisible(bottom)
     }
 
@@ -371,36 +376,5 @@ class ViewController: UIViewController, OTAClientDelegate {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "确定", style: .default))
         present(alert, animated: true)
-    }
-}
-
-// MARK: - UIDocumentPickerDelegate
-
-extension ViewController: UIDocumentPickerDelegate {
-    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        guard let url = urls.first else { return }
-
-        // 获取安全访问权限
-        guard url.startAccessingSecurityScopedResource() else {
-            showAlert(title: "错误", message: "无法访问文件")
-            return
-        }
-
-        selectedFileURL = url
-
-        do {
-            let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
-            let fileSize = attributes[.size] as? UInt64 ?? 0
-            let sizeMB = Double(fileSize) / 1024.0 / 1024.0
-            fileInfoLabel.text = String(format: "%@\n%.1f MB", url.lastPathComponent, sizeMB)
-            fileInfoLabel.textColor = .label
-
-            pushButton.isEnabled = !isPushing
-            pushButton.alpha = isPushing ? 0.5 : 1.0
-            pushButton.setTitle("开始推送", for: .normal)
-            pushButton.backgroundColor = .systemGreen
-        } catch {
-            fileInfoLabel.text = "读取文件失败: \(error.localizedDescription)"
-        }
     }
 }
