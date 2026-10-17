@@ -1,0 +1,29 @@
+name: AE5I_OTA_Tool
+options:
+  bundleIdPrefix: com.cfmoto
+  deploymentTarget:
+    iOS: "14.0"
+  createIntermediateGroups: true
+
+targets:
+  AE5IOTATool:
+    type: application
+    platform: iOS
+    deploymentTarget: "14.0"
+    sources:
+      - path: App
+    info:
+      path: App/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.cfmoto.ae5iota
+        PRODUCT_NAME: AE5I升级
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        IPHONEOS_DEPLOYMENT_TARGET: "14.0"
+        ENABLE_BITCODE: NO
+        SWIFT_EMIT_LOC_STRINGS: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: NO
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
