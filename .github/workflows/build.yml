@@ -1,0 +1,51 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: xcodegen generate
+
+      - name: Build
+        run: |
+          xcodebuild -project AE5I_OTA_Tool.xcodeproj \
+            -scheme AE5IOTATool \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package IPA
+        run: |
+          APP_PATH="build/Build/Products/Release-iphoneos/AE5I升级.app"
+          if [ -d "$APP_PATH" ]; then
+            mkdir -p Payload
+            cp -R "$APP_PATH" Payload/
+            zip -r AE5I_OTA_Tool.ipa Payload
+            echo "IPA_SIZE=$(du -k AE5I_OTA_Tool.ipa | cut -f1)KB"
+          else
+            echo "App not found at $APP_PATH"
+            ls -la build/Build/Products/Release-iphoneos/ || true
+            exit 1
+          fi
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: AE5I_OTA_Tool.ipa
+          path: AE5I_OTA_Tool.ipa
