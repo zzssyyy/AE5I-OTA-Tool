@@ -300,7 +300,8 @@ class OTAClient {
     private func waitForConnected() async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             var hasResumed = false
-            let checkWorkItem = DispatchWorkItem {
+            var checkWorkItem: DispatchWorkItem?
+            checkWorkItem = DispatchWorkItem {
                 if !hasResumed {
                     if case .connected = self.currentState {
                         hasResumed = true
@@ -309,12 +310,14 @@ class OTAClient {
                         hasResumed = true
                         continuation.resume(throwing: NSError(domain: "OTAClient", code: -3,
                             userInfo: [NSLocalizedDescriptionKey: msg]))
-                    } else {
-                        self.recvQueue.asyncAfter(deadline: .now() + 0.1, execute: checkWorkItem)
+                    } else if let item = checkWorkItem {
+                        self.recvQueue.asyncAfter(deadline: .now() + 0.1, execute: item)
                     }
                 }
             }
-            recvQueue.asyncAfter(deadline: .now() + 0.1, execute: checkWorkItem)
+            if let item = checkWorkItem {
+                recvQueue.asyncAfter(deadline: .now() + 0.1, execute: item)
+            }
         }
     }
 
