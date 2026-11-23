@@ -1,9 +1,0 @@
-name: diag2
-on: workflow_dispatch
-jobs:
-  m13:
-    runs-on: macos-13
-    steps: [{run: "sw_vers"}]
-  m14:
-    runs-on: macos-14
-    steps: [{run: "sw_vers"}]
