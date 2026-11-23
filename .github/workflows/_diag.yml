@@ -1,11 +1,11 @@
 name: diag
 on: workflow_dispatch
 jobs:
-  ubu:
-    runs-on: ubuntu-latest
+  win:
+    runs-on: windows-latest
     steps:
-      - run: echo "ubuntu ok"; uname -a
+      - run: echo "windows ok"
   mac:
     runs-on: macos-latest
     steps:
-      - run: echo "macos ok"; sw_vers
+      - run: echo "macos ok"
